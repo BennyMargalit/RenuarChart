@@ -1,0 +1,19 @@
+{
+  "name": "ariel-pilates-website",
+  "version": "1.0.0",
+  "description": "אתר תדמית אישי למאמנת הפילאטיס אריאל פרג'",
+  "main": "index.html",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "build": "echo 'Build completed'",
+    "deploy": "netlify deploy --prod --dir=."
+  },
+  "keywords": [
+    "pilates",
+    "fitness",
+    "hebrew",
+    "website"
+  ],
+  "author": "Ariel Fargi",
+  "license": "MIT"
+}
