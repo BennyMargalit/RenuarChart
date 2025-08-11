@@ -1,0 +1,15 @@
+/workspace/bin/Debug/net8.0/PaymentTracker
+/workspace/bin/Debug/net8.0/PaymentTracker.deps.json
+/workspace/bin/Debug/net8.0/PaymentTracker.runtimeconfig.json
+/workspace/bin/Debug/net8.0/PaymentTracker.dll
+/workspace/bin/Debug/net8.0/PaymentTracker.pdb
+/workspace/obj/Debug/net8.0/PaymentTracker.GeneratedMSBuildEditorConfig.editorconfig
+/workspace/obj/Debug/net8.0/PaymentTracker.AssemblyInfoInputs.cache
+/workspace/obj/Debug/net8.0/PaymentTracker.AssemblyInfo.cs
+/workspace/obj/Debug/net8.0/PaymentTracker.csproj.CoreCompileInputs.cache
+/workspace/obj/Debug/net8.0/PaymentTracker.sourcelink.json
+/workspace/obj/Debug/net8.0/PaymentTracker.dll
+/workspace/obj/Debug/net8.0/refint/PaymentTracker.dll
+/workspace/obj/Debug/net8.0/PaymentTracker.pdb
+/workspace/obj/Debug/net8.0/PaymentTracker.genruntimeconfig.cache
+/workspace/obj/Debug/net8.0/ref/PaymentTracker.dll
