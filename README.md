@@ -1,127 +1,206 @@
-# Payment Tracker
+# 🎯 PaymentApp - Web API
 
-A C# console application to help you track monthly payments, avoid double payments, and never miss a due date again!
+A modern C# Web API built with .NET 8 and Entity Framework Core to help you track monthly payments, avoid double payments, and never miss a due date again!
 
-## Features
+## 🚀 **Features**
 
-- **Payment Management**: Add, edit, delete, and track all your monthly payments
+- **RESTful API**: Full CRUD operations for payment management
 - **Smart Reminders**: Get alerts for overdue payments and upcoming due dates
 - **Recurring Payments**: Automatically create next payment for recurring bills
 - **Payment History**: Keep track of all paid and unpaid payments
-- **Data Persistence**: Your payments are automatically saved and loaded
-- **Summary Reports**: View payment statistics and totals
+- **Database Persistence**: SQLite database with Entity Framework Core
+- **Swagger Documentation**: Interactive API documentation
+- **Async Operations**: High-performance async/await pattern
+- **Data Validation**: Input validation and error handling
 
-## How It Works
+## 🏗️ **Architecture**
 
-The app automatically:
-- Shows reminders for overdue payments
-- Highlights payments due within 7 days
-- Creates next recurring payment when you mark one as paid
-- Saves all data to your local machine
-- Provides a clear overview of your payment status
+- **.NET 8 Web API** with minimal hosting model
+- **Entity Framework Core** with SQLite database
+- **Repository Pattern** with service layer
+- **DTOs** for clean API contracts
+- **Dependency Injection** for loose coupling
+- **CORS** enabled for cross-origin requests
 
-## Getting Started
+## 📋 **API Endpoints**
 
-### Prerequisites
+### **Core Payment Operations**
+- `GET /api/payments` - Get all payments
+- `GET /api/payments/{id}` - Get payment by ID
+- `POST /api/payments` - Create new payment
+- `PUT /api/payments/{id}` - Update existing payment
+- `DELETE /api/payments/{id}` - Delete payment
+
+### **Payment Status & Queries**
+- `GET /api/payments/upcoming?days=30` - Get upcoming payments
+- `GET /api/payments/overdue` - Get overdue payments
+- `GET /api/payments/due-soon?days=7` - Get payments due soon
+- `GET /api/payments/reminders` - Get payment reminders
+- `GET /api/payments/summary` - Get payment statistics
+
+### **Payment Actions**
+- `POST /api/payments/{id}/mark-as-paid` - Mark payment as paid
+
+## 🛠️ **Getting Started**
+
+### **Prerequisites**
 - .NET 8.0 SDK or later
-- Windows, macOS, or Linux
+- Any modern web browser
+- API testing tool (Postman, Insomnia, or curl)
 
-### Installation & Running
+### **Installation & Running**
 
 1. **Clone or download** the project files
 2. **Open terminal/command prompt** in the project directory
-3. **Build the project**:
+3. **Restore dependencies**:
+   ```bash
+   dotnet restore
+   ```
+4. **Build the project**:
    ```bash
    dotnet build
    ```
-4. **Run the application**:
+5. **Run the application**:
    ```bash
    dotnet run
    ```
+6. **Open your browser** and navigate to:
+   - **API**: `https://localhost:7001/api/payments`
+   - **Swagger UI**: `https://localhost:7001/swagger`
 
-## Usage Guide
+## 📊 **Sample API Usage**
 
-### Main Menu Options
+### **Create a New Payment**
+```bash
+curl -X POST "https://localhost:7001/api/payments" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Rent",
+    "amount": 1200.00,
+    "dueDate": "2024-12-01T00:00:00",
+    "isRecurring": true,
+    "recurrenceType": 1,
+    "notes": "Monthly rent payment"
+  }'
+```
 
-1. **View All Payments** - See all your payments in chronological order
-2. **Add New Payment** - Create a new payment entry
-3. **Edit Payment** - Modify existing payment details
-4. **Delete Payment** - Remove a payment from your tracker
-5. **Mark Payment as Paid** - Record when you've paid a bill
-6. **Show Reminders** - View overdue and upcoming payments
-7. **Show Upcoming Payments** - See payments due in the next 30 days
-8. **Show Overdue Payments** - View all overdue payments
-9. **Payment Summary** - Get statistics and totals
-0. **Exit** - Save and close the application
+### **Get All Payments**
+```bash
+curl "https://localhost:7001/api/payments"
+```
 
-### Adding a Payment
+### **Get Payment Reminders**
+```bash
+curl "https://localhost:7001/api/payments/reminders"
+```
 
-When adding a new payment, you'll be prompted for:
-- **Name**: What the payment is for (e.g., "Electric Bill", "Netflix")
-- **Amount**: How much you owe
-- **Due Date**: When the payment is due (MM/DD/YYYY format)
-- **Recurring**: Whether this is a monthly/quarterly/yearly bill
-- **Notes**: Optional additional information
+### **Mark Payment as Paid**
+```bash
+curl -X POST "https://localhost:7001/api/payments/1/mark-as-paid" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "paidDate": "2024-11-25T00:00:00"
+  }'
+```
 
-### Recurring Payments
+## 🗄️ **Database Schema**
 
-For recurring bills (like subscriptions), the app will:
-- Ask if it's recurring and how often
-- Automatically create the next payment when you mark one as paid
-- Keep your payment schedule going without manual input
+The app uses SQLite with the following structure:
 
-### Payment Status
+```sql
+Payments Table:
+- Id (Primary Key)
+- Name (Required, max 100 chars)
+- Amount (Required, decimal)
+- DueDate (Required, datetime)
+- PaidDate (Nullable, datetime)
+- IsRecurring (boolean)
+- RecurrenceType (enum: None, Monthly, Quarterly, Yearly)
+- Notes (max 500 chars)
+```
 
-Payments are automatically categorized as:
-- **Paid**: Payment has been completed
-- **Overdue**: Payment is past due
-- **Due Soon**: Payment is due within 7 days
-- **Upcoming**: Payment is due later
+## 🔄 **Recurring Payment Logic**
 
-## Data Storage
+When you mark a recurring payment as paid:
+1. **Monthly**: Next payment due in 1 month
+2. **Quarterly**: Next payment due in 3 months  
+3. **Yearly**: Next payment due in 1 year
 
-Your payment data is automatically saved to:
-- **Windows**: `%APPDATA%\PaymentTracker\payments.json`
-- **macOS**: `~/Library/Application Support/PaymentTracker/payments.json`
-- **Linux**: `~/.config/PaymentTracker/payments.json`
+The system automatically creates the next payment entry with the same details.
 
-The data is stored in JSON format and can be backed up or transferred between machines.
+## 📱 **Client Integration**
 
-## Tips for Best Use
+This API can be consumed by:
+- **Web Applications** (React, Angular, Vue.js)
+- **Mobile Apps** (React Native, Xamarin, Flutter)
+- **Desktop Applications** (WPF, WinForms)
+- **Other Services** (microservices, automation scripts)
 
-1. **Add all recurring bills** as recurring payments to avoid forgetting them
-2. **Use descriptive names** for payments to easily identify them
-3. **Check reminders regularly** to stay on top of upcoming payments
-4. **Mark payments as paid** immediately after paying to keep your records current
-5. **Use notes** to add account numbers, confirmation codes, or other details
+## 🧪 **Testing the API**
 
-## Example Use Cases
+### **Using Swagger UI**
+1. Navigate to `/swagger` in your browser
+2. Explore available endpoints
+3. Test API calls directly from the browser
+4. View request/response schemas
 
-- **Monthly Bills**: Rent, utilities, phone, internet, insurance
-- **Subscriptions**: Netflix, Spotify, gym memberships, software licenses
-- **Annual Payments**: Car registration, property taxes, insurance renewals
-- **Quarterly Payments**: Estimated taxes, business expenses
+### **Using Postman**
+1. Import the API endpoints
+2. Set base URL to `https://localhost:7001`
+3. Test all CRUD operations
+4. Verify response formats
 
-## Troubleshooting
+## 🔧 **Configuration**
 
-- **Data not saving**: Check if the app has write permissions to the data directory
-- **Date format errors**: Use MM/DD/YYYY format (e.g., 12/25/2024)
-- **Amount errors**: Enter only numbers and decimal points (e.g., 99.99)
+### **Database Connection**
+The app uses SQLite by default. To change to another database:
 
-## Future Enhancements
+1. Update `appsettings.json` connection string
+2. Install appropriate EF Core provider
+3. Update `Program.cs` configuration
 
-Potential features for future versions:
-- Email/SMS reminders
-- Payment categories and tags
-- Export to CSV/PDF
-- Multiple currency support
-- Payment splitting for shared expenses
-- Integration with banking apps
+### **CORS Policy**
+Currently allows all origins for development. For production:
+1. Restrict allowed origins in `Program.cs`
+2. Configure specific headers and methods
+3. Enable authentication/authorization
 
-## Contributing
+## 🚀 **Deployment**
 
-Feel free to suggest improvements or report issues. This is a personal project designed to solve real payment tracking problems.
+### **Local Development**
+- Uses HTTPS development certificate
+- SQLite database file in project root
+- Swagger enabled for development
+
+### **Production Deployment**
+- Use production database (SQL Server, PostgreSQL)
+- Configure proper CORS policies
+- Enable HTTPS and security headers
+- Set up logging and monitoring
+
+## 📈 **Future Enhancements**
+
+- **Authentication & Authorization** (JWT, OAuth)
+- **Email/SMS Notifications** for due dates
+- **Payment Categories & Tags**
+- **Export to CSV/PDF**
+- **Multiple Currency Support**
+- **Payment Splitting** for shared expenses
+- **Integration with Banking APIs**
+- **Real-time Notifications** (SignalR)
+
+## 🐛 **Troubleshooting**
+
+- **Port conflicts**: Change ports in `launchSettings.json`
+- **Database issues**: Delete `PaymentApp.db` to reset
+- **Build errors**: Ensure .NET 8 SDK is installed
+- **CORS issues**: Check browser console for errors
+
+## 🤝 **Contributing**
+
+Feel free to suggest improvements or report issues. This is designed to solve real payment tracking problems with modern web technologies.
 
 ---
 
-**Never pay double again!** 🎯
+**🎯 Never pay double again with PaymentApp Web API!**
+Your modern, scalable payment management solution! 💪

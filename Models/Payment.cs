@@ -1,9 +1,11 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace PaymentTracker.Models;
+namespace PaymentApp.Models;
 
 public class Payment
 {
+    [Key]
     public int Id { get; set; }
     
     [Required]
@@ -11,6 +13,7 @@ public class Payment
     public string Name { get; set; } = string.Empty;
     
     [Required]
+    [Column(TypeName = "decimal(18,2)")]
     [Range(0.01, double.MaxValue, ErrorMessage = "Amount must be greater than 0")]
     public decimal Amount { get; set; }
     
@@ -26,12 +29,16 @@ public class Payment
     [StringLength(500)]
     public string? Notes { get; set; }
     
+    [NotMapped]
     public bool IsPaid => PaidDate.HasValue;
     
+    [NotMapped]
     public bool IsOverdue => !IsPaid && DueDate < DateTime.Today;
     
+    [NotMapped]
     public int DaysUntilDue => (DueDate - DateTime.Today).Days;
     
+    [NotMapped]
     public string Status
     {
         get
@@ -46,8 +53,8 @@ public class Payment
 
 public enum RecurrenceType
 {
-    None,
-    Monthly,
-    Quarterly,
-    Yearly
+    None = 0,
+    Monthly = 1,
+    Quarterly = 2,
+    Yearly = 3
 }

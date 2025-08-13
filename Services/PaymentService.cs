@@ -1,111 +1,168 @@
-using PaymentTracker.Models;
-using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
+using PaymentApp.Data;
+using PaymentApp.Models;
+using PaymentApp.Models.DTOs;
 
-namespace PaymentTracker.Services;
+namespace PaymentApp.Services;
 
-public class PaymentService
+public class PaymentService : IPaymentService
 {
-    private readonly string _dataFilePath;
-    private List<Payment> _payments;
+    private readonly PaymentDbContext _context;
     
-    public PaymentService()
+    public PaymentService(PaymentDbContext context)
     {
-        _dataFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "PaymentTracker", "payments.json");
-        _payments = new List<Payment>();
-        LoadPayments();
+        _context = context;
     }
     
-    public IEnumerable<Payment> GetAllPayments()
+    public async Task<IEnumerable<PaymentResponseDto>> GetAllPaymentsAsync()
     {
-        return _payments.OrderBy(p => p.DueDate);
+        var payments = await _context.Payments
+            .OrderBy(p => p.DueDate)
+            .ToListAsync();
+            
+        return payments.Select(MapToResponseDto);
     }
     
-    public IEnumerable<Payment> GetUpcomingPayments(int days = 30)
+    public async Task<IEnumerable<PaymentResponseDto>> GetUpcomingPaymentsAsync(int days = 30)
     {
         var cutoffDate = DateTime.Today.AddDays(days);
-        return _payments
-            .Where(p => !p.IsPaid && p.DueDate <= cutoffDate)
-            .OrderBy(p => p.DueDate);
+        var payments = await _context.Payments
+            .Where(p => !p.PaidDate.HasValue && p.DueDate <= cutoffDate)
+            .OrderBy(p => p.DueDate)
+            .ToListAsync();
+            
+        return payments.Select(MapToResponseDto);
     }
     
-    public IEnumerable<Payment> GetOverduePayments()
+    public async Task<IEnumerable<PaymentResponseDto>> GetOverduePaymentsAsync()
     {
-        return _payments
-            .Where(p => p.IsOverdue)
-            .OrderBy(p => p.DueDate);
+        var payments = await _context.Payments
+            .Where(p => !p.PaidDate.HasValue && p.DueDate < DateTime.Today)
+            .OrderBy(p => p.DueDate)
+            .ToListAsync();
+            
+        return payments.Select(MapToResponseDto);
     }
     
-    public IEnumerable<Payment> GetDueSoonPayments(int days = 7)
+    public async Task<IEnumerable<PaymentResponseDto>> GetDueSoonPaymentsAsync(int days = 7)
     {
         var cutoffDate = DateTime.Today.AddDays(days);
-        return _payments
-            .Where(p => !p.IsPaid && p.DueDate <= cutoffDate && p.DueDate >= DateTime.Today)
-            .OrderBy(p => p.DueDate);
+        var payments = await _context.Payments
+            .Where(p => !p.PaidDate.HasValue && p.DueDate <= cutoffDate && p.DueDate >= DateTime.Today)
+            .OrderBy(p => p.DueDate)
+            .ToListAsync();
+            
+        return payments.Select(MapToResponseDto);
     }
     
-    public Payment? GetPaymentById(int id)
+    public async Task<IEnumerable<PaymentResponseDto>> GetRemindersAsync()
     {
-        return _payments.FirstOrDefault(p => p.Id == id);
-    }
-    
-    public Payment AddPayment(Payment payment)
-    {
-        payment.Id = _payments.Count > 0 ? _payments.Max(p => p.Id) + 1 : 1;
-        _payments.Add(payment);
-        SavePayments();
-        return payment;
-    }
-    
-    public bool UpdatePayment(Payment payment)
-    {
-        var existingPayment = GetPaymentById(payment.Id);
-        if (existingPayment == null) return false;
+        var reminders = new List<PaymentResponseDto>();
         
-        var index = _payments.IndexOf(existingPayment);
-        _payments[index] = payment;
-        SavePayments();
+        // Overdue payments
+        var overduePayments = await GetOverduePaymentsAsync();
+        reminders.AddRange(overduePayments);
+        
+        // Due in next 3 days
+        var dueSoonPayments = await GetDueSoonPaymentsAsync(3);
+        reminders.AddRange(dueSoonPayments);
+        
+        return reminders.OrderBy(p => p.DueDate);
+    }
+    
+    public async Task<PaymentResponseDto?> GetPaymentByIdAsync(int id)
+    {
+        var payment = await _context.Payments.FindAsync(id);
+        return payment != null ? MapToResponseDto(payment) : null;
+    }
+    
+    public async Task<PaymentResponseDto> CreatePaymentAsync(CreatePaymentDto createDto)
+    {
+        var payment = new Payment
+        {
+            Name = createDto.Name,
+            Amount = createDto.Amount,
+            DueDate = createDto.DueDate,
+            IsRecurring = createDto.IsRecurring,
+            RecurrenceType = createDto.RecurrenceType,
+            Notes = createDto.Notes
+        };
+        
+        _context.Payments.Add(payment);
+        await _context.SaveChangesAsync();
+        
+        return MapToResponseDto(payment);
+    }
+    
+    public async Task<PaymentResponseDto?> UpdatePaymentAsync(int id, UpdatePaymentDto updateDto)
+    {
+        var payment = await _context.Payments.FindAsync(id);
+        if (payment == null) return null;
+        
+        if (updateDto.Name != null)
+            payment.Name = updateDto.Name;
+        if (updateDto.Amount.HasValue)
+            payment.Amount = updateDto.Amount.Value;
+        if (updateDto.DueDate.HasValue)
+            payment.DueDate = updateDto.DueDate.Value;
+        if (updateDto.IsRecurring.HasValue)
+            payment.IsRecurring = updateDto.IsRecurring.Value;
+        if (updateDto.RecurrenceType.HasValue)
+            payment.RecurrenceType = updateDto.RecurrenceType.Value;
+        if (updateDto.Notes != null)
+            payment.Notes = updateDto.Notes;
+        
+        await _context.SaveChangesAsync();
+        return MapToResponseDto(payment);
+    }
+    
+    public async Task<bool> DeletePaymentAsync(int id)
+    {
+        var payment = await _context.Payments.FindAsync(id);
+        if (payment == null) return false;
+        
+        _context.Payments.Remove(payment);
+        await _context.SaveChangesAsync();
         return true;
     }
     
-    public bool DeletePayment(int id)
+    public async Task<bool> MarkAsPaidAsync(int id, MarkAsPaidDto markAsPaidDto)
     {
-        var payment = GetPaymentById(id);
+        var payment = await _context.Payments.FindAsync(id);
         if (payment == null) return false;
         
-        _payments.Remove(payment);
-        SavePayments();
-        return true;
-    }
-    
-    public bool MarkAsPaid(int id, DateTime? paidDate = null)
-    {
-        var payment = GetPaymentById(id);
-        if (payment == null) return false;
-        
-        payment.PaidDate = paidDate ?? DateTime.Today;
+        payment.PaidDate = markAsPaidDto.PaidDate ?? DateTime.Today;
         
         // If recurring, create next payment
         if (payment.IsRecurring && payment.RecurrenceType != RecurrenceType.None)
         {
             var nextPayment = CreateNextRecurringPayment(payment);
-            _payments.Add(nextPayment);
+            _context.Payments.Add(nextPayment);
         }
         
-        SavePayments();
+        await _context.SaveChangesAsync();
         return true;
     }
     
-    public IEnumerable<Payment> GetReminders()
+    public async Task<PaymentSummaryDto> GetPaymentSummaryAsync()
     {
-        var reminders = new List<Payment>();
+        var allPayments = await _context.Payments.ToListAsync();
+        var paidPayments = allPayments.Where(p => p.PaidDate.HasValue);
+        var unpaidPayments = allPayments.Where(p => !p.PaidDate.HasValue);
+        var overduePayments = allPayments.Where(p => !p.PaidDate.HasValue && p.DueDate < DateTime.Today);
+        var dueSoonPayments = allPayments.Where(p => !p.PaidDate.HasValue && (p.DueDate - DateTime.Today).Days <= 7);
         
-        // Overdue payments
-        reminders.AddRange(GetOverduePayments());
-        
-        // Due in next 3 days
-        reminders.AddRange(GetDueSoonPayments(3));
-        
-        return reminders.OrderBy(p => p.DueDate);
+        return new PaymentSummaryDto
+        {
+            TotalPayments = allPayments.Count,
+            PaidCount = paidPayments.Count(),
+            UnpaidCount = unpaidPayments.Count(),
+            OverdueCount = overduePayments.Count(),
+            DueSoonCount = dueSoonPayments.Count(),
+            TotalAmountPaid = paidPayments.Sum(p => p.Amount),
+            TotalAmountDue = unpaidPayments.Sum(p => p.Amount),
+            TotalOverdueAmount = overduePayments.Sum(p => p.Amount)
+        };
     }
     
     private Payment CreateNextRecurringPayment(Payment originalPayment)
@@ -129,39 +186,22 @@ public class PaymentService
         };
     }
     
-    private void LoadPayments()
+    private static PaymentResponseDto MapToResponseDto(Payment payment)
     {
-        try
+        return new PaymentResponseDto
         {
-            if (File.Exists(_dataFilePath))
-            {
-                var json = File.ReadAllText(_dataFilePath);
-                _payments = JsonSerializer.Deserialize<List<Payment>>(json) ?? new List<Payment>();
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error loading payments: {ex.Message}");
-            _payments = new List<Payment>();
-        }
-    }
-    
-    private void SavePayments()
-    {
-        try
-        {
-            var directory = Path.GetDirectoryName(_dataFilePath);
-            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
-            
-            var json = JsonSerializer.Serialize(_payments, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(_dataFilePath, json);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error saving payments: {ex.Message}");
-        }
+            Id = payment.Id,
+            Name = payment.Name,
+            Amount = payment.Amount,
+            DueDate = payment.DueDate,
+            PaidDate = payment.PaidDate,
+            IsRecurring = payment.IsRecurring,
+            RecurrenceType = payment.RecurrenceType,
+            Notes = payment.Notes,
+            IsPaid = payment.IsPaid,
+            IsOverdue = payment.IsOverdue,
+            DaysUntilDue = payment.DaysUntilDue,
+            Status = payment.Status
+        };
     }
 }

@@ -1,41 +1,51 @@
-using PaymentTracker.Services;
-using PaymentTracker.UI;
+using Microsoft.EntityFrameworkCore;
+using PaymentApp.Data;
+using PaymentApp.Services;
 
-namespace PaymentTracker;
+var builder = WebApplication.CreateBuilder(args);
 
-class Program
+// Add services to the container.
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+// Add Entity Framework with SQLite
+builder.Services.AddDbContext<PaymentDbContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Add custom services
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+
+// Add CORS
+builder.Services.AddCors(options =>
 {
-    static void Main(string[] args)
+    options.AddPolicy("AllowAll", policy =>
     {
-        Console.WriteLine("Welcome to Payment Tracker!");
-        Console.WriteLine("Your personal assistant to never pay double again!");
-        Console.WriteLine();
-        
-        try
-        {
-            var paymentService = new PaymentService();
-            var ui = new ConsoleUI(paymentService);
-            
-            // Show reminders on startup
-            var reminders = paymentService.GetReminders();
-            if (reminders.Any())
-            {
-                Console.WriteLine("⚠️  REMINDERS:");
-                foreach (var reminder in reminders)
-                {
-                    var status = reminder.IsOverdue ? "OVERDUE" : $"Due in {reminder.DaysUntilDue} days";
-                    Console.WriteLine($"  • {reminder.Name}: ${reminder.Amount:F2} - {status}");
-                }
-                Console.WriteLine();
-            }
-            
-            ui.Run();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"An error occurred: {ex.Message}");
-            Console.WriteLine("Press any key to exit...");
-            Console.ReadKey();
-        }
-    }
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
+
+app.UseHttpsRedirection();
+app.UseCors("AllowAll");
+app.UseAuthorization();
+app.MapControllers();
+
+// Ensure database is created
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<PaymentDbContext>();
+    context.Database.EnsureCreated();
+}
+
+app.Run();
