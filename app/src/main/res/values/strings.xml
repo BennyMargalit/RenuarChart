@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Payment Reminder</string>
+    <string name="permission_camera_rationale">Camera permission is needed to scan receipts</string>
+    <string name="permission_notification_rationale">Notification permission is needed to remind you of upcoming payments</string>
+</resources>

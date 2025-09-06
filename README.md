@@ -1,127 +1,165 @@
-# Payment Tracker
+# Payment Reminder Android App
 
-A C# console application to help you track monthly payments, avoid double payments, and never miss a due date again!
+A modern Android app built with Kotlin and Jetpack Compose that helps you track payments and expenses with camera-based receipt scanning.
 
 ## Features
 
-- **Payment Management**: Add, edit, delete, and track all your monthly payments
-- **Smart Reminders**: Get alerts for overdue payments and upcoming due dates
-- **Recurring Payments**: Automatically create next payment for recurring bills
-- **Payment History**: Keep track of all paid and unpaid payments
-- **Data Persistence**: Your payments are automatically saved and loaded
-- **Summary Reports**: View payment statistics and totals
+### 💳 Payment Management
+- **Add Payments**: Create recurring or one-time payment reminders
+- **Payment Tracking**: View upcoming, overdue, and paid payments
+- **Smart Notifications**: Get reminded of upcoming payments
+- **Categories**: Organize payments by category (Utilities, Rent, Insurance, etc.)
 
-## How It Works
+### 📱 Expense Tracking
+- **Monthly Overview**: See your total monthly expenses at a glance
+- **Category Breakdown**: Track spending by category
+- **Receipt Scanning**: Use camera to scan receipts and automatically extract expense data
+- **Manual Entry**: Add expenses manually with detailed information
 
-The app automatically:
-- Shows reminders for overdue payments
-- Highlights payments due within 7 days
-- Creates next recurring payment when you mark one as paid
-- Saves all data to your local machine
-- Provides a clear overview of your payment status
+### 📸 Camera Integration
+- **Receipt Scanning**: Take photos of receipts to automatically extract:
+  - Merchant name
+  - Amount
+  - Date
+  - Raw text for verification
+- **Smart Parsing**: AI-powered text recognition to parse receipt data
+- **Preview & Confirm**: Review extracted data before adding to expenses
+
+### 🔔 Smart Notifications
+- **Daily Reminders**: Check for upcoming payments every day
+- **Overdue Alerts**: Get notified about overdue payments
+- **Customizable Timing**: Notifications sent at 9 AM daily
+
+## Technical Architecture
+
+### Built With
+- **Kotlin** - Modern Android development language
+- **Jetpack Compose** - Modern UI toolkit
+- **Room Database** - Local data persistence
+- **Hilt** - Dependency injection
+- **CameraX** - Camera functionality
+- **ML Kit** - Text recognition for receipt scanning
+- **WorkManager** - Background notification scheduling
+
+### Architecture Pattern
+- **MVVM** (Model-View-ViewModel)
+- **Repository Pattern** for data access
+- **Dependency Injection** with Hilt
+- **Reactive Programming** with Kotlin Flow
+
+## Project Structure
+
+```
+app/
+├── src/main/java/com/paymentreminder/app/
+│   ├── data/
+│   │   ├── entity/          # Room database entities
+│   │   ├── dao/             # Data access objects
+│   │   ├── database/        # Database configuration
+│   │   └── repository/      # Repository implementations
+│   ├── ui/
+│   │   ├── screens/         # Compose screens
+│   │   ├── components/      # Reusable UI components
+│   │   ├── viewmodel/       # ViewModels
+│   │   ├── navigation/      # Navigation setup
+│   │   └── theme/           # App theming
+│   ├── camera/              # Camera and receipt parsing
+│   ├── notification/        # Notification management
+│   └── di/                  # Dependency injection modules
+```
 
 ## Getting Started
 
 ### Prerequisites
-- .NET 8.0 SDK or later
-- Windows, macOS, or Linux
+- Android Studio Arctic Fox or later
+- Android SDK 24+ (Android 7.0)
+- Kotlin 1.9.20+
 
-### Installation & Running
+### Installation
+1. Clone the repository
+2. Open in Android Studio
+3. Sync Gradle files
+4. Run on device or emulator
 
-1. **Clone or download** the project files
-2. **Open terminal/command prompt** in the project directory
-3. **Build the project**:
-   ```bash
-   dotnet build
-   ```
-4. **Run the application**:
-   ```bash
-   dotnet run
-   ```
+### Permissions Required
+- **Camera**: For scanning receipts
+- **Notifications**: For payment reminders
+- **Storage**: For saving receipt images
 
-## Usage Guide
+## Usage
 
-### Main Menu Options
+### Adding Payments
+1. Tap the "+" button on the home screen
+2. Fill in payment details:
+   - Title (e.g., "Electric Bill")
+   - Amount
+   - Category
+   - Due date
+   - Description (optional)
+   - Recurring settings (optional)
+3. Tap "Add Payment"
 
-1. **View All Payments** - See all your payments in chronological order
-2. **Add New Payment** - Create a new payment entry
-3. **Edit Payment** - Modify existing payment details
-4. **Delete Payment** - Remove a payment from your tracker
-5. **Mark Payment as Paid** - Record when you've paid a bill
-6. **Show Reminders** - View overdue and upcoming payments
-7. **Show Upcoming Payments** - See payments due in the next 30 days
-8. **Show Overdue Payments** - View all overdue payments
-9. **Payment Summary** - Get statistics and totals
-0. **Exit** - Save and close the application
+### Tracking Expenses
+1. Go to the Expenses tab
+2. Use the camera to scan receipts or add manually
+3. Review and confirm extracted data
+4. View monthly summaries and category breakdowns
 
-### Adding a Payment
+### Camera Scanning
+1. Tap the camera icon
+2. Point camera at receipt
+3. Tap capture button
+4. Review extracted data
+5. Confirm to add as expense
 
-When adding a new payment, you'll be prompted for:
-- **Name**: What the payment is for (e.g., "Electric Bill", "Netflix")
-- **Amount**: How much you owe
-- **Due Date**: When the payment is due (MM/DD/YYYY format)
-- **Recurring**: Whether this is a monthly/quarterly/yearly bill
-- **Notes**: Optional additional information
+## Database Schema
 
-### Recurring Payments
+### Payments Table
+- `id`: Primary key
+- `title`: Payment name
+- `amount`: Payment amount
+- `dueDate`: Due date
+- `category`: Payment category
+- `description`: Optional description
+- `isPaid`: Payment status
+- `isRecurring`: Recurring flag
+- `recurringInterval`: Recurring frequency
+- `createdAt`: Creation timestamp
+- `receiptImagePath`: Optional receipt image
 
-For recurring bills (like subscriptions), the app will:
-- Ask if it's recurring and how often
-- Automatically create the next payment when you mark one as paid
-- Keep your payment schedule going without manual input
-
-### Payment Status
-
-Payments are automatically categorized as:
-- **Paid**: Payment has been completed
-- **Overdue**: Payment is past due
-- **Due Soon**: Payment is due within 7 days
-- **Upcoming**: Payment is due later
-
-## Data Storage
-
-Your payment data is automatically saved to:
-- **Windows**: `%APPDATA%\PaymentTracker\payments.json`
-- **macOS**: `~/Library/Application Support/PaymentTracker/payments.json`
-- **Linux**: `~/.config/PaymentTracker/payments.json`
-
-The data is stored in JSON format and can be backed up or transferred between machines.
-
-## Tips for Best Use
-
-1. **Add all recurring bills** as recurring payments to avoid forgetting them
-2. **Use descriptive names** for payments to easily identify them
-3. **Check reminders regularly** to stay on top of upcoming payments
-4. **Mark payments as paid** immediately after paying to keep your records current
-5. **Use notes** to add account numbers, confirmation codes, or other details
-
-## Example Use Cases
-
-- **Monthly Bills**: Rent, utilities, phone, internet, insurance
-- **Subscriptions**: Netflix, Spotify, gym memberships, software licenses
-- **Annual Payments**: Car registration, property taxes, insurance renewals
-- **Quarterly Payments**: Estimated taxes, business expenses
-
-## Troubleshooting
-
-- **Data not saving**: Check if the app has write permissions to the data directory
-- **Date format errors**: Use MM/DD/YYYY format (e.g., 12/25/2024)
-- **Amount errors**: Enter only numbers and decimal points (e.g., 99.99)
+### Expenses Table
+- `id`: Primary key
+- `title`: Expense name
+- `amount`: Expense amount
+- `category`: Expense category
+- `date`: Expense date
+- `description`: Optional description
+- `receiptImagePath`: Optional receipt image
+- `createdAt`: Creation timestamp
 
 ## Future Enhancements
 
-Potential features for future versions:
-- Email/SMS reminders
-- Payment categories and tags
-- Export to CSV/PDF
-- Multiple currency support
-- Payment splitting for shared expenses
-- Integration with banking apps
+- [ ] Export data to CSV/PDF
+- [ ] Budget tracking and alerts
+- [ ] Multiple currency support
+- [ ] Cloud backup and sync
+- [ ] Advanced analytics and charts
+- [ ] Payment method tracking
+- [ ] Bill splitting features
+- [ ] Integration with banking APIs
 
 ## Contributing
 
-Feel free to suggest improvements or report issues. This is a personal project designed to solve real payment tracking problems.
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
----
+## License
 
-**Never pay double again!** 🎯
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Support
+
+For issues and questions, please create an issue in the GitHub repository.
